@@ -1,36 +1,108 @@
-﻿<Window x:Class="USPGH_planning_lourd.MainWindow"
-        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:USPGH_planning_lourd"
-        mc:Ignorable="d"
-        Title="USPGH Planning" Height="450" Width="800">
-    <Grid Margin="10">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="Auto"/>
-        </Grid.RowDefinitions>
+﻿ using System.Collections.ObjectModel;
+using System.Text;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Data;
+using System.Windows.Documents;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
+using System.Windows.Navigation;
+using System.Windows.Shapes;
+using USPGH_planning_lourd.classes;
+using System;
+using System.Linq;
 
-        <TextBlock Grid.Row="0" Text="Users Management" FontSize="18" FontWeight="Bold" Margin="0,0,0,10"/>
+namespace USPGH_planning_lourd;
 
-        <DataGrid Grid.Row="1" Name="UsersList" AutoGenerateColumns="False" IsReadOnly="True" 
-                  ItemsSource="{Binding Users}" SelectionMode="Single" Margin="0,0,0,10">
-            <DataGrid.Columns>
-                <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="50"/>
-                <DataGridTextColumn Header="First Name" Binding="{Binding first_name}" Width="120"/>
-                <DataGridTextColumn Header="Last Name" Binding="{Binding last_name}" Width="120"/>
-                <DataGridTextColumn Header="Email" Binding="{Binding email}" Width="180"/>
-                <DataGridTextColumn Header="Created" Binding="{Binding created_at, StringFormat={}{0:dd/MM/yyyy HH:mm}}" Width="120"/>
-                <DataGridTextColumn Header="Updated" Binding="{Binding updated_at, StringFormat={}{0:dd/MM/yyyy HH:mm}}" Width="120"/>
-            </DataGrid.Columns>
-        </DataGrid>
+///<summary>
+    /// Interaction logic for MainWindow.xaml
+///</summary>
+public partial class MainWindow : Window
+{
+    public ObservableCollection
+<User>Users { get; set; }
+    private UserRoleManager _roleManager;
 
-        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right">
-            <Button Name="AddUser" Content="Add User" Width="80" Margin="0,0,10,0" Click="AddUser_Click"/>
-            <Button Name="EditUser" Content="Edit User" Width="80" Margin="0,0,10,0" Click="EditUser_Click"/>
-            <Button Name="DeleteUser" Content="Delete User" Width="80" Click="DeleteUser_Click"/>
-        </StackPanel>
-    </Grid>
-</Window>
+    public MainWindow()
+    {
+        InitializeComponent();
+        Users = new ObservableCollection
+    <User>();
+        
+        using (var db = new AppDbContext())
+        {
+            _roleManager = new UserRoleManager(db);
+        }
+        
+        LoadUsers();
+        DataContext = this;
+    }
+
+    private void LoadUsers()
+    {
+        using (var db = new AppDbContext())
+        {
+            Users.Clear();
+            var userRoleManager = new UserRoleManager(db);
+            
+            var users = db.Users.ToList();
+            foreach (var user in users)
+            {
+                userRoleManager.LoadUserRoles(user);
+                Users.Add(user);
+            }
+        }
+    }
+
+    private void AddUser_Click(object sender, RoutedEventArgs e)
+    {
+        var addUserWindow = new AddUserWindow();
+        if (addUserWindow.ShowDialog() == true)
+        {
+            LoadUsers();
+        }
+    }
+
+    private void EditUser_Click(object sender, RoutedEventArgs e)
+    {
+        if (UsersList.SelectedItem is User selectedUser)
+        {
+            var editUserWindow = new EditUserWindow(selectedUser);
+            if (editUserWindow.ShowDialog() == true)
+            {
+                LoadUsers();
+            }
+        }
+    }
+
+    private void DeleteUser_Click(object sender, RoutedEventArgs e)
+    {
+        if (UsersList.SelectedItem is User selectedUser)
+        {
+            // Check if the user has the admin role before allowing deletion
+            using (var db = new AppDbContext())
+            {
+                var roleManager = new UserRoleManager(db);
+                bool isAdmin = roleManager.IsUserInRole(selectedUser, "admin");
+                
+                if (isAdmin)
+                {
+                    MessageBox.Show("Cannot delete an administrator user.", "Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+            }
+            
+            MessageBoxResult result = MessageBox.Show("Are you sure you want to delete this user?", "Confirm", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+            if (result == MessageBoxResult.Yes)
+            {
+                using (var db = new AppDbContext())
+                {
+                    db.Users.Remove(selectedUser);
+                    db.SaveChanges();
+                }
+                LoadUsers();
+            }
+        }
+    }
+}
