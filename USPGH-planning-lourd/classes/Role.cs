@@ -27,3 +27,4 @@ namespace USPGH_planning_lourd.classes
         public DateTime? UpdatedAt { get; set; }
     }
 }
+

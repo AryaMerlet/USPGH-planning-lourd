@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Pomelo.EntityFrameworkCore.MySql.Infrastructure;
 using USPGH_planning_lourd.classes;
-using System.Configuration;
 
 namespace USPGH_planning_lourd
 {
@@ -9,19 +9,14 @@ namespace USPGH_planning_lourd
         private DbSet<User> users;
         public DbSet<User> Users { get => users; set => users = value; }
 
-        public DbSet<Role> Roles { get; set; }
-        public DbSet<AssignedRole> AssignedRoles { get; set; }
-
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            string connectionString = ConfigurationManager.ConnectionStrings["DbConnection"].ConnectionString;
-            optionsBuilder.UseMySql("server=10.192.136.10;database=uspgh-planning;user=arya;password=Not24get",
-                new MySqlServerVersion(new Version(10, 5, 9)));
-
-
+            optionsBuilder.UseMySql(
+                "server=10.192.136.10;database=uspgh-planning;user=arya;password=Not24get",
+                ServerVersion.Create(10, 5, 9, ServerType.MariaDb));
         }
 
-        protected override void OnModelCreating(ModelBuilder modelBuilder)
+protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
 

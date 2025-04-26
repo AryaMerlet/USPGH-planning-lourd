@@ -101,7 +101,7 @@ namespace USPGH_planning_lourd.services
             _context.SaveChanges();
         }
 
-        public class BCrypt
+        public static class BCrypt
         {
             public static string HashPassword(string password)
             {

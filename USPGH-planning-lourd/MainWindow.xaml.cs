@@ -1,9 +1,9 @@
-﻿using System.Collections.ObjectModel;
+﻿// USPGH-planning-lourd/MainWindow.xaml.cs
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows;
 using Microsoft.EntityFrameworkCore;
 using USPGH_planning_lourd.classes;
-using USPGH_planning_lourd.Windows;
 
 namespace USPGH_planning_lourd;
 
