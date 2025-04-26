@@ -1,125 +1,99 @@
-﻿// USPGH-planning-lourd/MainWindow.xaml.cs
-using System.Collections.ObjectModel;
-using System.Linq;
+﻿using System.Collections.ObjectModel;
 using System.Windows;
-using Microsoft.EntityFrameworkCore;
 using USPGH_planning_lourd.classes;
+using System.Linq;
 
-namespace USPGH_planning_lourd;
-
-/// <summary>
-/// Interaction logic for MainWindow.xaml
-/// </summary>
-public partial class MainWindow : Window
+namespace USPGH_planning_lourd
 {
-    public ObservableCollection<User> Users { get; set; }
-
-    public MainWindow()
+    /// <summary>
+    /// Interaction logic for MainWindow.xaml
+    /// </summary>
+    public partial class MainWindow : Window
     {
-        InitializeComponent();
-        Users = new ObservableCollection<User>();
-        LoadUsers();
-        DataContext = this;
-    }
+        public ObservableCollection<User> Users { get; set; }
 
-    private void LoadUsers()
-    {
-        using (var db = new AppDbContext())
+        public MainWindow()
         {
-            Users.Clear();
+            InitializeComponent();
+            Users = new ObservableCollection<User>();
+            LoadUsers();
+            DataContext = this;
+        }
 
-            // Get all users with their roles
-            var users = db.Users.ToList();
-
-            foreach (var user in users)
+        private void LoadUsers()
+        {
+            using (var db = new AppDbContext())
             {
-                // Find role for this user
-                var assignedRole = db.AssignedRoles
-                    .Include(ar => ar.Role)
-                    .FirstOrDefault(ar => ar.EntityId == user.Id && ar.EntityType == "App\\Models\\User");
+                Users.Clear();
+                var userList = db.Users.ToList();
 
-                if (assignedRole != null)
+                // Load roles for each user
+                foreach (var user in userList)
                 {
-                    user.Role = assignedRole.Role.Name;
-                }
-                else
-                {
-                    user.Role = "No role";
-                }
+                    try
+                    {
+                        // Set the role flags
+                        db.LoadUserRoles(user);
+                        Users.Add(user);
+                    }
+                    catch (System.Exception ex)
+                    {
+                        MessageBox.Show($"Error loading roles for user {user.email}: {ex.Message}",
+                            "Error", MessageBoxButton.OK, MessageBoxImage.Error);
 
-                Users.Add(user);
+                        // Add the user anyway, but without roles
+                        Users.Add(user);
+                    }
+                }
             }
         }
-    }
 
-    private void AddUser_Click(object sender, RoutedEventArgs e)
-    {
-        var addUserWindow = new AddUserWindow();
-        if (addUserWindow.ShowDialog() == true)
+        private void AddUser_Click(object sender, RoutedEventArgs e)
         {
-            LoadUsers();
-        }
-    }
-
-    private void EditUser_Click(object sender, RoutedEventArgs e)
-    {
-        if (UsersList.SelectedItem is User selectedUser)
-        {
-            var editUserWindow = new EditUserWindow(selectedUser);
-            if (editUserWindow.ShowDialog() == true)
+            var addUserWindow = new AddUserWindow();
+            if (addUserWindow.ShowDialog() == true)
             {
                 LoadUsers();
             }
         }
-        else
-        {
-            MessageBox.Show("Please select a user to edit.", "Selection Required", MessageBoxButton.OK, MessageBoxImage.Information);
-        }
-    }
 
-    private void DeleteUser_Click(object sender, RoutedEventArgs e)
-    {
-        if (UsersList.SelectedItem is User selectedUser)
+        private void EditUser_Click(object sender, RoutedEventArgs e)
         {
-            MessageBoxResult result = MessageBox.Show(
-                $"Are you sure you want to delete user {selectedUser.first_name} {selectedUser.last_name}?",
-                "Confirm Deletion",
-                MessageBoxButton.YesNo,
-                MessageBoxImage.Warning);
-
-            if (result == MessageBoxResult.Yes)
+            if (UsersList.SelectedItem is User selectedUser)
             {
-                try
+                var editUserWindow = new EditUserWindow(selectedUser);
+                if (editUserWindow.ShowDialog() == true)
                 {
-                    using (var db = new AppDbContext())
-                    {
-                        // First delete any role assignments
-                        var roleAssignments = db.AssignedRoles
-                            .Where(ar => ar.EntityId == selectedUser.Id && ar.EntityType == "App\\Models\\User");
-
-                        db.AssignedRoles.RemoveRange(roleAssignments);
-
-                        // Then delete the user
-                        var user = db.Users.Find(selectedUser.Id);
-                        if (user != null)
-                        {
-                            db.Users.Remove(user);
-                            db.SaveChanges();
-
-                            LoadUsers();
-                            MessageBox.Show("User deleted successfully.", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
-                        }
-                    }
-                }
-                catch (System.Exception ex)
-                {
-                    MessageBox.Show($"Error deleting user: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    LoadUsers();
                 }
             }
         }
-        else
+
+        private void DeleteUser_Click(object sender, RoutedEventArgs e)
         {
-            MessageBox.Show("Please select a user to delete.", "Selection Required", MessageBoxButton.OK, MessageBoxImage.Information);
+            if (UsersList.SelectedItem is User selectedUser)
+            {
+                // Check if the user is an admin
+                if (selectedUser.IsAdmin)
+                {
+                    MessageBox.Show("You cannot delete an administrator!",
+                        "Operation not allowed", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                MessageBoxResult result = MessageBox.Show("Are you sure you want to delete this user?",
+                    "Confirm", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+
+                if (result == MessageBoxResult.Yes)
+                {
+                    using (var db = new AppDbContext())
+                    {
+                        db.Users.Remove(selectedUser);
+                        db.SaveChanges();
+                    }
+                    LoadUsers();
+                }
+            }
         }
     }
 }

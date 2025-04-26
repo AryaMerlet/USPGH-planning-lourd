@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -33,14 +32,22 @@ namespace USPGH_planning_lourd.classes
         [Column("updated_at")]
         public DateTime? updated_at { get; set; }
 
-        // Navigation property for roles
         [NotMapped]
-        public List<Role> Roles { get; set; } = new List<Role>();
+        public bool IsAdmin { get; set; }
 
-        // Helper method to check roles
-        public bool IsInRole(string roleName)
+        [NotMapped]
+        public bool IsSalarie { get; set; }
+
+        // Simplification of role check
+        public bool HasRole(string roleName)
         {
-            return Roles.Exists(r => r.Name.Equals(roleName, StringComparison.OrdinalIgnoreCase));
+            if (roleName.Equals("admin", StringComparison.OrdinalIgnoreCase))
+                return IsAdmin;
+
+            if (roleName.Equals("salarie", StringComparison.OrdinalIgnoreCase))
+                return IsSalarie;
+
+            return false;
         }
     }
 }

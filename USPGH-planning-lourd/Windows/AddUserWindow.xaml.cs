@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.EntityFrameworkCore;
+using System;
 using System.Windows;
 using USPGH_planning_lourd.classes;
 
@@ -49,6 +50,17 @@ namespace USPGH_planning_lourd
                 {
                     db.Users.Add(user);
                     db.SaveChanges();
+
+                    // Insert the role record
+                    // We need to execute SQL directly since we don't have a DbSet for it
+                    var roleId = (RoleComboBox.SelectedIndex == 0) ? 1 : 2; // 1 for admin, 2 for salarie
+
+                    // Insert into model_has_roles
+                    db.Database.ExecuteSqlRaw(
+                        "INSERT INTO model_has_roles (role_id, model_type, model_id) VALUES ({0}, {1}, {2})",
+                        roleId,
+                        "App\\Models\\User",
+                        user.Id);
                 }
 
                 DialogResult = true;

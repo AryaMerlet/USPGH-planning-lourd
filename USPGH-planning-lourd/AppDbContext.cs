@@ -1,44 +1,45 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Pomelo.EntityFrameworkCore.MySql.Infrastructure;
 using USPGH_planning_lourd.classes;
+using System;
+using System.Linq;
 
 namespace USPGH_planning_lourd
 {
     public class AppDbContext : DbContext
     {
-        private DbSet<User>? users;
-        private DbSet<Role>? roles;
-        private DbSet<UserRole>? userRoles;
-
-        public DbSet<User> Users { get => users!; set => users = value; }
-        public DbSet<Role> Roles { get => roles!; set => roles = value; }
-        public DbSet<UserRole> UserRoles { get => userRoles!; set => userRoles = value; }
+        private DbSet<User> users;
+        public DbSet<User> Users { get => users; set => users = value; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            optionsBuilder.UseMySql(
-                "server=10.192.136.10;database=uspgh-planning;user=arya;password=Not24get",
-                ServerVersion.Create(10, 5, 9, ServerType.MariaDb));
+            optionsBuilder.UseMySql("server=10.192.136.10;database=uspgh-planning;user=arya;password=Not24get",
+                ServerVersion.Parse("10.5.9-mariadb"));
         }
 
-        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        // Load user roles by querying the model_has_roles junction table
+        public void LoadUserRoles(User user)
         {
-            base.OnModelCreating(modelBuilder);
+            // Query to check if user has admin role
+            var adminQuery = Database.ExecuteSqlRaw(
+                "SELECT COUNT(*) FROM model_has_roles " +
+                "JOIN roles ON model_has_roles.role_id = roles.id " +
+                "WHERE model_has_roles.model_id = {0} " +
+                "AND model_has_roles.model_type = 'App\\\\Models\\\\User' " +
+                "AND roles.name = 'admin'",
+                user.Id);
 
-            // Configure the composite key for UserRole
-            modelBuilder.Entity<UserRole>()
-                .HasKey(ur => new { ur.RoleId, ur.ModelType, ur.UserId });
+            // Query to check if user has salarie role
+            var salarieQuery = Database.ExecuteSqlRaw(
+                "SELECT COUNT(*) FROM model_has_roles " +
+                "JOIN roles ON model_has_roles.role_id = roles.id " +
+                "WHERE model_has_roles.model_id = {0} " +
+                "AND model_has_roles.model_type = 'App\\\\Models\\\\User' " +
+                "AND roles.name = 'salarie'",
+                user.Id);
 
-            // Configure relationships
-            modelBuilder.Entity<UserRole>()
-                .HasOne(ur => ur.Role)
-                .WithMany()
-                .HasForeignKey(ur => ur.RoleId);
-
-            modelBuilder.Entity<UserRole>()
-                .HasOne(ur => ur.User)
-                .WithMany()
-                .HasForeignKey(ur => ur.UserId);
+            // Set the role flags based on the query results
+            user.IsAdmin = adminQuery > 0;
+            user.IsSalarie = salarieQuery > 0;
         }
     }
 }
