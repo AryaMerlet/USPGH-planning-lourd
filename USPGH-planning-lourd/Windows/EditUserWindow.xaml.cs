@@ -1,99 +1,59 @@
-﻿// EditUserWindow.xaml.cs
-using Microsoft.EntityFrameworkCore;
-using System;
-using System.Linq;
+﻿using System;
 using System.Windows;
-using System.Windows.Controls;
 using USPGH_planning_lourd.classes;
-using USPGH_planning_lourd.services;
 
 namespace USPGH_planning_lourd
 {
+    /// <summary>
+    /// Interaction logic for EditUserWindow.xaml
+    /// </summary>
     public partial class EditUserWindow : Window
     {
-        private readonly UserService _userService;
-        private readonly User _user;
-        private string _currentRole;
+        private User _user;
 
         public EditUserWindow(User user)
         {
             InitializeComponent();
-            _userService = new UserService();
             _user = user;
+            LoadUserData();
+        }
 
-            // Populate the form with user data
+        private void LoadUserData()
+        {
             FirstNameTextBox.Text = _user.first_name;
             LastNameTextBox.Text = _user.last_name;
             EmailTextBox.Text = _user.email;
-
-            // Get the user's role and select it in the combobox
-            using (var db = new AppDbContext())
-            {
-                var assignedRole = db.AssignedRoles
-                    .Include(ar => ar.Role)
-                    .FirstOrDefault(ar => ar.EntityId == _user.Id);
-
-                if (assignedRole != null)
-                {
-                    _currentRole = assignedRole.Role.Name;
-                    if (_currentRole == "admin")
-                    {
-                        RoleComboBox.SelectedIndex = 1;
-                    }
-                    else
-                    {
-                        RoleComboBox.SelectedIndex = 0;
-                    }
-                }
-                else
-                {
-                    RoleComboBox.SelectedIndex = 0;
-                    _currentRole = "salarie";
-                }
-            }
         }
 
         private void SaveButton_Click(object sender, RoutedEventArgs e)
         {
+            // Validate input
+            if (string.IsNullOrWhiteSpace(FirstNameTextBox.Text) ||
+                string.IsNullOrWhiteSpace(LastNameTextBox.Text) ||
+                string.IsNullOrWhiteSpace(EmailTextBox.Text))
+            {
+                MessageBox.Show("Please fill in all required fields.", "Validation Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+
             try
             {
-                // Validate inputs
-                if (string.IsNullOrWhiteSpace(FirstNameTextBox.Text) ||
-                    string.IsNullOrWhiteSpace(LastNameTextBox.Text) ||
-                    string.IsNullOrWhiteSpace(EmailTextBox.Text))
+                // Update user data
+                _user.first_name = FirstNameTextBox.Text;
+                _user.last_name = LastNameTextBox.Text;
+                _user.email = EmailTextBox.Text;
+                _user.updated_at = DateTime.Now;
+
+                // Update password if provided
+                if (!string.IsNullOrWhiteSpace(PasswordBox.Password))
                 {
-                    MessageBox.Show("All fields are required.", "Validation Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                    return;
+                    _user.password = BCrypt.Net.BCrypt.HashPassword(PasswordBox.Password);
                 }
 
-                string selectedRole = (RoleComboBox.SelectedItem as ComboBoxItem)?.Content.ToString() ?? "salarie";
-
-                // Update user information
                 using (var db = new AppDbContext())
                 {
-                    var user = db.Users.Find(_user.Id);
-                    if (user != null)
-                    {
-                        user.first_name = FirstNameTextBox.Text;
-                        user.last_name = LastNameTextBox.Text;
-                        user.email = EmailTextBox.Text;
-                        user.updated_at = DateTime.Now;
-
-                        // If password is provided, update it
-                        if (!string.IsNullOrEmpty(PasswordBox.Password))
-                        {
-                            user.password = UserService.BCrypt.HashPassword(PasswordBox.Password);
-                        }
-
-                        db.SaveChanges();
-                    }
-                }
-
-                // Update role if changed
-                if (_currentRole != selectedRole)
-                {
-                    _userService.RemoveRoleFromUser(_user.Id, _currentRole);
-                    _userService.AssignRoleToUser(_user.Id, selectedRole);
+                    db.Users.Update(_user);
+                    db.SaveChanges();
                 }
 
                 DialogResult = true;
@@ -101,7 +61,7 @@ namespace USPGH_planning_lourd
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error updating user: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"An error occurred: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 

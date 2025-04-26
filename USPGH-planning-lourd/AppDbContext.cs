@@ -1,5 +1,4 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Pomelo.EntityFrameworkCore.MySql.Infrastructure;
 using USPGH_planning_lourd.classes;
 
 namespace USPGH_planning_lourd
@@ -7,36 +6,26 @@ namespace USPGH_planning_lourd
     public class AppDbContext : DbContext
     {
         private DbSet<User> users;
+        private DbSet<Role> roles;
+        private DbSet<AssignedRole> assignedRoles;
+
         public DbSet<User> Users { get => users; set => users = value; }
+        public DbSet<Role> Roles { get => roles; set => roles = value; }
+        public DbSet<AssignedRole> AssignedRoles { get => assignedRoles; set => assignedRoles = value; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            optionsBuilder.UseMySql(
-                "server=10.192.136.10;database=uspgh-planning;user=arya;password=Not24get",
-                ServerVersion.Create(10, 5, 9, ServerType.MariaDb));
+            optionsBuilder.UseMySql("server=10.192.136.10;database=uspgh-planning;user=arya;password=Not24get",
+                ServerVersion.Create(10, 5, 9, Pomelo.EntityFrameworkCore.MySql.Infrastructure.ServerType.MariaDb));
         }
 
-protected override void OnModelCreating(ModelBuilder modelBuilder)
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
 
-            // Configure the entity type for User
-            modelBuilder.Entity<User>()
-                .ToTable("users");
-
-            // Configure the entity type for Role
-            modelBuilder.Entity<Role>()
-                .ToTable("roles");
-
-            // Configure the entity type for AssignedRole
+            // Configure the composite key for AssignedRole
             modelBuilder.Entity<AssignedRole>()
-                .ToTable("assigned_roles");
-
-            // Define the relationship between User and Role through AssignedRole
-            modelBuilder.Entity<AssignedRole>()
-                .HasOne<Role>()
-                .WithMany()
-                .HasForeignKey(ar => ar.RoleId);
+                .HasKey(ar => new { ar.RoleId, ar.ModelType, ar.ModelId });
         }
     }
 }
