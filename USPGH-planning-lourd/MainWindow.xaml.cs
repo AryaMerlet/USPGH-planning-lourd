@@ -1,7 +1,9 @@
-﻿using System.Collections.ObjectModel;
+﻿using System;
+using System.Collections.ObjectModel;
 using System.Windows;
 using USPGH_planning_lourd.classes;
 using System.Linq;
+using Microsoft.EntityFrameworkCore;
 
 namespace USPGH_planning_lourd
 {
@@ -22,77 +24,122 @@ namespace USPGH_planning_lourd
 
         private void LoadUsers()
         {
-            using (var db = new AppDbContext())
+            try
             {
-                Users.Clear();
-                var userList = db.Users.ToList();
-
-                // Load roles for each user
-                foreach (var user in userList)
+                using (var db = new AppDbContext())
                 {
-                    try
-                    {
-                        // Set the role flags
-                        db.LoadUserRoles(user);
-                        Users.Add(user);
-                    }
-                    catch (System.Exception ex)
-                    {
-                        MessageBox.Show($"Error loading roles for user {user.email}: {ex.Message}",
-                            "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    Users.Clear();
 
-                        // Add the user anyway, but without roles
-                        Users.Add(user);
+                    // Add a timeout and handle exceptions for database operations
+                    var userList = db.Users
+                        .AsNoTracking() // Use AsNoTracking for read-only operations to improve performance
+                        .ToList();
+
+                    // Load roles for each user
+                    foreach (var user in userList)
+                    {
+                        try
+                        {
+                            // Set the role flags
+                            db.LoadUserRoles(user);
+                            Users.Add(user);
+                        }
+                        catch (Exception ex)
+                        {
+                            MessageBox.Show($"Error loading roles for user {user.email}: {ex.Message}",
+                                "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+
+                            // Add the user anyway, but without roles
+                            Users.Add(user);
+                        }
                     }
                 }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error connecting to database: {ex.Message}\n\nDetail: {ex.InnerException?.Message}",
+                    "Database Connection Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
         private void AddUser_Click(object sender, RoutedEventArgs e)
         {
-            var addUserWindow = new AddUserWindow();
-            if (addUserWindow.ShowDialog() == true)
+            try
             {
-                LoadUsers();
+                var addUserWindow = new AddUserWindow();
+                if (addUserWindow.ShowDialog() == true)
+                {
+                    LoadUsers();
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error adding user: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
         private void EditUser_Click(object sender, RoutedEventArgs e)
         {
-            if (UsersList.SelectedItem is User selectedUser)
+            try
             {
-                var editUserWindow = new EditUserWindow(selectedUser);
-                if (editUserWindow.ShowDialog() == true)
+                if (UsersList.SelectedItem is User selectedUser)
                 {
-                    LoadUsers();
+                    var editUserWindow = new EditUserWindow(selectedUser);
+                    if (editUserWindow.ShowDialog() == true)
+                    {
+                        LoadUsers();
+                    }
                 }
+                else
+                {
+                    MessageBox.Show("Please select a user to edit", "No Selection", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error editing user: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
         private void DeleteUser_Click(object sender, RoutedEventArgs e)
         {
-            if (UsersList.SelectedItem is User selectedUser)
+            try
             {
-                // Check if the user is an admin
-                if (selectedUser.IsAdmin)
+                if (UsersList.SelectedItem is User selectedUser)
                 {
-                    MessageBox.Show("You cannot delete an administrator!",
-                        "Operation not allowed", MessageBoxButton.OK, MessageBoxImage.Warning);
-                    return;
-                }
-
-                MessageBoxResult result = MessageBox.Show("Are you sure you want to delete this user?",
-                    "Confirm", MessageBoxButton.YesNo, MessageBoxImage.Warning);
-
-                if (result == MessageBoxResult.Yes)
-                {
-                    using (var db = new AppDbContext())
+                    // Check if the user is an admin
+                    if (selectedUser.IsAdmin)
                     {
-                        db.Users.Remove(selectedUser);
-                        db.SaveChanges();
+                        MessageBox.Show("You cannot delete an administrator!",
+                            "Operation not allowed", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        return;
                     }
-                    LoadUsers();
+
+                    MessageBoxResult result = MessageBox.Show("Are you sure you want to delete this user?",
+                        "Confirm", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+
+                    if (result == MessageBoxResult.Yes)
+                    {
+                        using (var db = new AppDbContext())
+                        {
+                            var userToDelete = db.Users.Find(selectedUser.Id);
+                            if (userToDelete != null)
+                            {
+                                db.Users.Remove(userToDelete);
+                                db.SaveChanges();
+                                LoadUsers();
+                            }
+                        }
+                    }
                 }
+                else
+                {
+                    MessageBox.Show("Please select a user to delete", "No Selection", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error deleting user: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
     }

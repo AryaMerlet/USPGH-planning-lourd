@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Linq;
-using System.Security.Cryptography;
-using System.Text;
 using USPGH_planning_lourd.classes;
 using Microsoft.EntityFrameworkCore;
 
@@ -30,9 +28,8 @@ namespace USPGH_planning_lourd.services
                 first_name = firstName,
                 last_name = lastName,
                 email = email,
-                // Laravel uses bcrypt, but we'll use a different method here
-                // since we're just storing the user, Laravel will handle auth
-                password = BCrypt.HashPassword(password),
+                // Use the BCrypt.Net package directly
+                password = BCrypt.Net.BCrypt.HashPassword(password),
                 email_verified_at = DateTime.Now,
                 created_at = DateTime.Now,
                 updated_at = DateTime.Now
@@ -58,8 +55,8 @@ namespace USPGH_planning_lourd.services
             }
 
             // Check if the role is already assigned
-            var existingAssignment = _context.AssignedRoles
-                .FirstOrDefault(ar => ar.EntityId == userId && ar.RoleId == role.Id);
+            var existingAssignment = _context.UserRoles
+                .FirstOrDefault(ar => ar.UserId == userId && ar.RoleId == role.Id);
 
             if (existingAssignment != null)
             {
@@ -67,15 +64,14 @@ namespace USPGH_planning_lourd.services
             }
 
             // Create the new role assignment
-            var assignedRole = new AssignedRole
+            var userRole = new UserRole
             {
                 RoleId = role.Id,
-                EntityId = userId,
-                EntityType = "App\\Models\\User", // This must match Laravel's namespace
-                Scope = null
+                UserId = userId,
+                ModelType = "App\\Models\\User" // This must match Laravel's namespace
             };
 
-            _context.AssignedRoles.Add(assignedRole);
+            _context.UserRoles.Add(userRole);
             _context.SaveChanges();
         }
 
@@ -89,24 +85,16 @@ namespace USPGH_planning_lourd.services
                 throw new InvalidOperationException($"Role '{roleName}' not found.");
             }
 
-            var assignedRole = _context.AssignedRoles
-                .FirstOrDefault(ar => ar.EntityId == userId && ar.RoleId == role.Id);
+            var userRole = _context.UserRoles
+                .FirstOrDefault(ar => ar.UserId == userId && ar.RoleId == role.Id);
 
-            if (assignedRole == null)
+            if (userRole == null)
             {
                 throw new InvalidOperationException($"User does not have the role '{roleName}'.");
             }
 
-            _context.AssignedRoles.Remove(assignedRole);
+            _context.UserRoles.Remove(userRole);
             _context.SaveChanges();
-        }
-
-        public static class BCrypt
-        {
-            public static string HashPassword(string password)
-            {
-                return BCrypt.Net.BCrypt.HashPassword(password, BCrypt.Net.BCrypt.GenerateSalt(12));
-            }
         }
     }
 }

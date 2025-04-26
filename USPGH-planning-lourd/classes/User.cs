@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Linq;
 
 namespace USPGH_planning_lourd.classes
 {
@@ -38,7 +40,10 @@ namespace USPGH_planning_lourd.classes
         [NotMapped]
         public bool IsSalarie { get; set; }
 
-        // Simplification of role check
+        [NotMapped]
+        public List<Role> Roles { get; set; } = new List<Role>();
+
+        // Check if user has a specific role
         public bool HasRole(string roleName)
         {
             if (roleName.Equals("admin", StringComparison.OrdinalIgnoreCase))
@@ -47,7 +52,13 @@ namespace USPGH_planning_lourd.classes
             if (roleName.Equals("salarie", StringComparison.OrdinalIgnoreCase))
                 return IsSalarie;
 
-            return false;
+            return Roles.Any(r => r.Name.Equals(roleName, StringComparison.OrdinalIgnoreCase));
+        }
+
+        // Add IsInRole method which was missing
+        public bool IsInRole(string roleName)
+        {
+            return HasRole(roleName);
         }
     }
 }

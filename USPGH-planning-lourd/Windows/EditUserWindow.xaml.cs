@@ -1,7 +1,7 @@
-﻿using Microsoft.EntityFrameworkCore;
-using System;
+﻿using System;
 using System.Windows;
 using USPGH_planning_lourd.classes;
+using USPGH_planning_lourd.services;
 
 namespace USPGH_planning_lourd
 {
@@ -11,11 +11,13 @@ namespace USPGH_planning_lourd
     public partial class EditUserWindow : Window
     {
         private User _user;
+        private UserService _userService;
 
         public EditUserWindow(User user)
         {
             InitializeComponent();
             _user = user;
+            _userService = new UserService();
             LoadUserData();
         }
 
@@ -24,6 +26,12 @@ namespace USPGH_planning_lourd
             FirstNameTextBox.Text = _user.first_name;
             LastNameTextBox.Text = _user.last_name;
             EmailTextBox.Text = _user.email;
+
+            // Make sure the IsAdmin and IsSalarie properties are properly initialized
+            using (var db = new AppDbContext())
+            {
+                db.LoadUserRoles(_user);
+            }
 
             // Set the role in the combobox
             RoleComboBox.SelectedIndex = _user.IsAdmin ? 0 : 1;
@@ -70,25 +78,23 @@ namespace USPGH_planning_lourd
 
                     // Update role if changed
                     bool shouldBeAdmin = RoleComboBox.SelectedIndex == 0;
-                    bool shouldBeSalarie = RoleComboBox.SelectedIndex == 1;
+                    bool isCurrentlyAdmin = userToUpdate.IsAdmin;
+
+                    // Load current roles
+                    db.LoadUserRoles(userToUpdate);
 
                     // Only process role changes if needed
-                    if (shouldBeAdmin != _user.IsAdmin || shouldBeSalarie != _user.IsSalarie)
+                    if (shouldBeAdmin != isCurrentlyAdmin)
                     {
                         // Remove existing roles
-                        db.Database.ExecuteSqlRaw(
-                            "DELETE FROM model_has_roles WHERE model_id = {0} AND model_type = {1}",
-                            userToUpdate.Id,
-                            "App\\Models\\User");
+                        foreach (var role in userToUpdate.Roles.ToList())
+                        {
+                            _userService.RemoveRoleFromUser(userToUpdate.Id, role.Name);
+                        }
 
                         // Add the new role
-                        int roleId = shouldBeAdmin ? 1 : 2;  // 1 for admin, 2 for salarie
-
-                        db.Database.ExecuteSqlRaw(
-                            "INSERT INTO model_has_roles (role_id, model_type, model_id) VALUES ({0}, {1}, {2})",
-                            roleId,
-                            "App\\Models\\User",
-                            userToUpdate.Id);
+                        string newRole = shouldBeAdmin ? "admin" : "salarie";
+                        _userService.AssignRoleToUser(userToUpdate.Id, newRole);
                     }
                 }
 

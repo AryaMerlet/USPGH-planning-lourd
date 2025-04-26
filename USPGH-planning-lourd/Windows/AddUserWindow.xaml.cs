@@ -1,7 +1,7 @@
-﻿using Microsoft.EntityFrameworkCore;
-using System;
+﻿using System;
 using System.Windows;
 using USPGH_planning_lourd.classes;
+using USPGH_planning_lourd.services;
 
 namespace USPGH_planning_lourd
 {
@@ -35,33 +35,16 @@ namespace USPGH_planning_lourd
 
             try
             {
-                // Create and save new user
-                var user = new User
-                {
-                    first_name = FirstNameTextBox.Text,
-                    last_name = LastNameTextBox.Text,
-                    email = EmailTextBox.Text,
-                    password = BCrypt.Net.BCrypt.HashPassword(PasswordBox.Password),
-                    created_at = DateTime.Now,
-                    updated_at = DateTime.Now
-                };
+                // Use the UserService to create the user
+                var userService = new UserService();
+                string roleName = (RoleComboBox.SelectedIndex == 0) ? "admin" : "salarie";
 
-                using (var db = new AppDbContext())
-                {
-                    db.Users.Add(user);
-                    db.SaveChanges();
-
-                    // Insert the role record
-                    // We need to execute SQL directly since we don't have a DbSet for it
-                    var roleId = (RoleComboBox.SelectedIndex == 0) ? 1 : 2; // 1 for admin, 2 for salarie
-
-                    // Insert into model_has_roles
-                    db.Database.ExecuteSqlRaw(
-                        "INSERT INTO model_has_roles (role_id, model_type, model_id) VALUES ({0}, {1}, {2})",
-                        roleId,
-                        "App\\Models\\User",
-                        user.Id);
-                }
+                userService.CreateUser(
+                    FirstNameTextBox.Text,
+                    LastNameTextBox.Text,
+                    EmailTextBox.Text,
+                    PasswordBox.Password,
+                    roleName);
 
                 DialogResult = true;
                 Close();
