@@ -1,16 +1,9 @@
 ﻿using System.Collections.ObjectModel;
-using System.Text;
+using System.Linq;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
+using Microsoft.EntityFrameworkCore;
 using USPGH_planning_lourd.classes;
-using System;
+using USPGH_planning_lourd.Windows;
 
 namespace USPGH_planning_lourd;
 
@@ -34,8 +27,26 @@ public partial class MainWindow : Window
         using (var db = new AppDbContext())
         {
             Users.Clear();
-            foreach (var user in db.Users.ToList())
+
+            // Get all users with their roles
+            var users = db.Users.ToList();
+
+            foreach (var user in users)
             {
+                // Find role for this user
+                var assignedRole = db.AssignedRoles
+                    .Include(ar => ar.Role)
+                    .FirstOrDefault(ar => ar.EntityId == user.Id && ar.EntityType == "App\\Models\\User");
+
+                if (assignedRole != null)
+                {
+                    user.Role = assignedRole.Role.Name;
+                }
+                else
+                {
+                    user.Role = "No role";
+                }
+
                 Users.Add(user);
             }
         }
@@ -60,22 +71,55 @@ public partial class MainWindow : Window
                 LoadUsers();
             }
         }
+        else
+        {
+            MessageBox.Show("Please select a user to edit.", "Selection Required", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
     }
 
     private void DeleteUser_Click(object sender, RoutedEventArgs e)
     {
         if (UsersList.SelectedItem is User selectedUser)
         {
-            MessageBoxResult result = MessageBox.Show("Are you sure you want to delete this user?", "Confirm", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+            MessageBoxResult result = MessageBox.Show(
+                $"Are you sure you want to delete user {selectedUser.first_name} {selectedUser.last_name}?",
+                "Confirm Deletion",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Warning);
+
             if (result == MessageBoxResult.Yes)
             {
-                using (var db = new AppDbContext())
+                try
                 {
-                    db.Users.Remove(selectedUser);
-                    db.SaveChanges();
+                    using (var db = new AppDbContext())
+                    {
+                        // First delete any role assignments
+                        var roleAssignments = db.AssignedRoles
+                            .Where(ar => ar.EntityId == selectedUser.Id && ar.EntityType == "App\\Models\\User");
+
+                        db.AssignedRoles.RemoveRange(roleAssignments);
+
+                        // Then delete the user
+                        var user = db.Users.Find(selectedUser.Id);
+                        if (user != null)
+                        {
+                            db.Users.Remove(user);
+                            db.SaveChanges();
+
+                            LoadUsers();
+                            MessageBox.Show("User deleted successfully.", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+                        }
+                    }
                 }
-                LoadUsers();
+                catch (System.Exception ex)
+                {
+                    MessageBox.Show($"Error deleting user: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
             }
+        }
+        else
+        {
+            MessageBox.Show("Please select a user to delete.", "Selection Required", MessageBoxButton.OK, MessageBoxImage.Information);
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿namespace USPGH_planning_lourd
+﻿namespace USPGH_planning_lourd.Windows
 {
     internal class AddUserWindow
     {
