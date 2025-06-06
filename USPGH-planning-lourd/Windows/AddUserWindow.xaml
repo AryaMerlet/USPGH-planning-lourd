@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:USPGH_planning_lourd"
         mc:Ignorable="d"
-        Title="Add New User" Height="350" Width="450">
+        Title="Ajouter un Utilisateur" Height="350" Width="450">
     <Grid Margin="10">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -22,30 +22,30 @@
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
 
-        <Label Grid.Row="0" Grid.Column="0" Content="First Name:" Margin="0,5,10,5"/>
+        <Label Grid.Row="0" Grid.Column="0" Content="Prénom :" Margin="0,5,10,5"/>
         <TextBox Grid.Row="0" Grid.Column="1" x:Name="FirstNameTextBox" Margin="0,5,0,5"/>
 
-        <Label Grid.Row="1" Grid.Column="0" Content="Last Name:" Margin="0,5,10,5"/>
+        <Label Grid.Row="1" Grid.Column="0" Content="Nom :" Margin="0,5,10,5"/>
         <TextBox Grid.Row="1" Grid.Column="1" x:Name="LastNameTextBox" Margin="0,5,0,5"/>
 
-        <Label Grid.Row="2" Grid.Column="0" Content="Email:" Margin="0,5,10,5"/>
+        <Label Grid.Row="2" Grid.Column="0" Content="Email :" Margin="0,5,10,5"/>
         <TextBox Grid.Row="2" Grid.Column="1" x:Name="EmailTextBox" Margin="0,5,0,5"/>
 
-        <Label Grid.Row="3" Grid.Column="0" Content="Password:" Margin="0,5,10,5"/>
+        <Label Grid.Row="3" Grid.Column="0" Content="Mot de passe :" Margin="0,5,10,5"/>
         <PasswordBox Grid.Row="3" Grid.Column="1" x:Name="PasswordBox" Margin="0,5,0,5"/>
 
-        <Label Grid.Row="4" Grid.Column="0" Content="Confirm Password:" Margin="0,5,10,5"/>
+        <Label Grid.Row="4" Grid.Column="0" Content="Confirmer mot de passe :" Margin="0,5,10,5"/>
         <PasswordBox Grid.Row="4" Grid.Column="1" x:Name="ConfirmPasswordBox" Margin="0,5,0,5"/>
 
-        <Label Grid.Row="5" Grid.Column="0" Content="Role:" Margin="0,5,10,5"/>
+        <Label Grid.Row="5" Grid.Column="0" Content="Rôle :" Margin="0,5,10,5"/>
         <ComboBox Grid.Row="5" Grid.Column="1" x:Name="RoleComboBox" Margin="0,5,0,5">
-            <ComboBoxItem Content="Admin"/>
-            <ComboBoxItem Content="Salarie" IsSelected="True"/>
+            <ComboBoxItem Content="Administrateur"/>
+            <ComboBoxItem Content="Salarié" IsSelected="True"/>
         </ComboBox>
 
         <StackPanel Grid.Row="7" Grid.Column="0" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0">
-            <Button x:Name="SaveButton" Content="Save" Width="75" Margin="0,0,10,0" Click="SaveButton_Click"/>
-            <Button x:Name="CancelButton" Content="Cancel" Width="75" Click="CancelButton_Click"/>
+            <Button x:Name="SaveButton" Content="Enregistrer" Width="85" Margin="0,0,10,0" Click="SaveButton_Click"/>
+            <Button x:Name="CancelButton" Content="Annuler" Width="75" Click="CancelButton_Click"/>
         </StackPanel>
     </Grid>
 </Window>

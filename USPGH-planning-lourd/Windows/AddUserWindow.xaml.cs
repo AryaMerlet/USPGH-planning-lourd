@@ -23,13 +23,13 @@ namespace USPGH_planning_lourd
                 string.IsNullOrWhiteSpace(EmailTextBox.Text) ||
                 string.IsNullOrWhiteSpace(PasswordBox.Password))
             {
-                MessageBox.Show("Please fill in all required fields.", "Validation Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show("Veuillez remplir tous les champs obligatoires.", "Erreur de validation", MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
             }
 
             if (PasswordBox.Password != ConfirmPasswordBox.Password)
             {
-                MessageBox.Show("The passwords do not match.", "Validation Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show("Les mots de passe ne correspondent pas.", "Erreur de validation", MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
             }
 
@@ -51,7 +51,7 @@ namespace USPGH_planning_lourd
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"An error occurred: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Une erreur est survenue: {ex.Message}", "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 

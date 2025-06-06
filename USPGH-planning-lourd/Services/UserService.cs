@@ -19,7 +19,7 @@ namespace USPGH_planning_lourd.services
             // Check if user already exists
             if (_context.Users.Any(u => u.email == email))
             {
-                throw new InvalidOperationException("User with this email already exists.");
+                throw new InvalidOperationException("Un utilisateur avec cette addresse mail existe déjà.");
             }
 
             // Create user
@@ -44,53 +44,53 @@ namespace USPGH_planning_lourd.services
             return user;
         }
 
-        public void AssignRoleToUser(int userId, string roleName)
+        public void AssignRoleToUser(long userId, string roleName)
         {
             var role = _context.Roles
                 .FirstOrDefault(r => r.Name == roleName);
 
             if (role == null)
             {
-                throw new InvalidOperationException($"Role '{roleName}' not found.");
+                throw new InvalidOperationException($"Rôle '{roleName}' non trouvé.");
             }
 
             // Check if the role is already assigned
             var existingAssignment = _context.UserRoles
-                .FirstOrDefault(ar => ar.UserId == userId && ar.RoleId == role.Id);
+                .FirstOrDefault(ar => ar.EntityId == userId && ar.RoleId == role.Id && ar.EntityType == "App\\Models\\User");
 
             if (existingAssignment != null)
             {
-                throw new InvalidOperationException($"User already has the role '{roleName}'.");
+                throw new InvalidOperationException($"L'utilisateur possède déjà le rôle '{roleName}'.");
             }
 
             // Create the new role assignment
             var userRole = new UserRole
             {
                 RoleId = role.Id,
-                UserId = userId,
-                ModelType = "App\\Models\\User" // This must match Laravel's namespace
+                EntityId = userId,
+                EntityType = "App\\Models\\User" // This must match Laravel's namespace
             };
 
             _context.UserRoles.Add(userRole);
             _context.SaveChanges();
         }
 
-        public void RemoveRoleFromUser(int userId, string roleName)
+        public void RemoveRoleFromUser(long userId, string roleName)
         {
             var role = _context.Roles
                 .FirstOrDefault(r => r.Name == roleName);
 
             if (role == null)
             {
-                throw new InvalidOperationException($"Role '{roleName}' not found.");
+                throw new InvalidOperationException($"Rôle '{roleName}' non trouvé.");
             }
 
             var userRole = _context.UserRoles
-                .FirstOrDefault(ar => ar.UserId == userId && ar.RoleId == role.Id);
+                .FirstOrDefault(ar => ar.EntityId == userId && ar.RoleId == role.Id && ar.EntityType == "App\\Models\\User");
 
             if (userRole == null)
             {
-                throw new InvalidOperationException($"User does not have the role '{roleName}'.");
+                throw new InvalidOperationException($"l'utilisateur ne possède pas le rôle '{roleName}'.");
             }
 
             _context.UserRoles.Remove(userRole);
