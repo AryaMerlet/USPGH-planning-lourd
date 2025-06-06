@@ -19,7 +19,7 @@ namespace USPGH_planning_lourd.services
             // Check if user already exists
             if (_context.Users.Any(u => u.email == email))
             {
-                throw new InvalidOperationException("Un utilisateur avec cette addresse mail existe déjà.");
+                throw new InvalidOperationException("User with this email already exists.");
             }
 
             // Create user
@@ -44,14 +44,14 @@ namespace USPGH_planning_lourd.services
             return user;
         }
 
-        public void AssignRoleToUser(long userId, string roleName)
+        public void AssignRoleToUser(int userId, string roleName)
         {
             var role = _context.Roles
                 .FirstOrDefault(r => r.Name == roleName);
 
             if (role == null)
             {
-                throw new InvalidOperationException($"Rôle '{roleName}' non trouvé.");
+                throw new InvalidOperationException($"Role '{roleName}' not found.");
             }
 
             // Check if the role is already assigned
@@ -60,7 +60,7 @@ namespace USPGH_planning_lourd.services
 
             if (existingAssignment != null)
             {
-                throw new InvalidOperationException($"L'utilisateur possède déjà le rôle '{roleName}'.");
+                throw new InvalidOperationException($"User already has the role '{roleName}'.");
             }
 
             // Create the new role assignment
@@ -75,14 +75,14 @@ namespace USPGH_planning_lourd.services
             _context.SaveChanges();
         }
 
-        public void RemoveRoleFromUser(long userId, string roleName)
+        public void RemoveRoleFromUser(int userId, string roleName)
         {
             var role = _context.Roles
                 .FirstOrDefault(r => r.Name == roleName);
 
             if (role == null)
             {
-                throw new InvalidOperationException($"Rôle '{roleName}' non trouvé.");
+                throw new InvalidOperationException($"Role '{roleName}' not found.");
             }
 
             var userRole = _context.UserRoles
@@ -90,7 +90,7 @@ namespace USPGH_planning_lourd.services
 
             if (userRole == null)
             {
-                throw new InvalidOperationException($"l'utilisateur ne possède pas le rôle '{roleName}'.");
+                throw new InvalidOperationException($"User does not have the role '{roleName}'.");
             }
 
             _context.UserRoles.Remove(userRole);
