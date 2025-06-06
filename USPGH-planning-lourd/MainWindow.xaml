@@ -13,7 +13,7 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <TextBlock Grid.Row="0" Text="Gestion des Utilisateurs" FontSize="18" FontWeight="Bold" Margin="0,0,0,10"/>
+        <TextBlock Grid.Row="0" Text="Gestion des utilisateurs" FontSize="18" FontWeight="Bold" Margin="0,0,0,10"/>
 
         <DataGrid Grid.Row="1" Name="UsersList" AutoGenerateColumns="False" IsReadOnly="True" 
                   ItemsSource="{Binding Users}" SelectionMode="Single" Margin="0,0,0,10">
@@ -22,8 +22,7 @@
                 <DataGridTextColumn Header="Prénom" Binding="{Binding first_name}" Width="120"/>
                 <DataGridTextColumn Header="Nom" Binding="{Binding last_name}" Width="120"/>
                 <DataGridTextColumn Header="Email" Binding="{Binding email}" Width="180"/>
-                <DataGridTextColumn Header="Admin" Binding="{Binding IsAdmin}" Width="60"/>
-                <DataGridTextColumn Header="Salarié" Binding="{Binding IsSalarie}" Width="60"/>
+                <DataGridTextColumn Header="Rôle" Binding="{Binding RoleDisplay}" Width="100"/>
                 <DataGridTextColumn Header="Créé le" Binding="{Binding created_at, StringFormat={}{0:dd/MM/yyyy HH:mm}}" Width="120"/>
             </DataGrid.Columns>
         </DataGrid>

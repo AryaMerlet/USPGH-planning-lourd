@@ -17,6 +17,7 @@ namespace USPGH_planning_lourd
 
         private void SaveButton_Click(object sender, RoutedEventArgs e)
         {
+
             // Validate input
             if (string.IsNullOrWhiteSpace(FirstNameTextBox.Text) ||
                 string.IsNullOrWhiteSpace(LastNameTextBox.Text) ||
@@ -46,12 +47,13 @@ namespace USPGH_planning_lourd
                     PasswordBox.Password,
                     roleName);
 
+                MessageBox.Show("Utilisateur créé avec succès !", "Succès", MessageBoxButton.OK, MessageBoxImage.Information);
                 DialogResult = true;
                 Close();
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Une erreur est survenue: {ex.Message}", "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Une erreur s'est produite : {ex.Message}", "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 

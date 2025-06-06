@@ -17,7 +17,7 @@ namespace USPGH_planning_lourd.classes
         public string EntityType { get; set; } = string.Empty;
 
         [Column("entity_id")]
-        public long EntityId { get; set; }
+        public int EntityId { get; set; }
 
         [Column("restricted_to_id")]
         public long? RestrictedToId { get; set; }

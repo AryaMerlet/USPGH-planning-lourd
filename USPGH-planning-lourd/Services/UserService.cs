@@ -14,6 +14,42 @@ namespace USPGH_planning_lourd.services
             _context = new AppDbContext();
         }
 
+        private string GenerateLaravelCompatibleHash(string password)
+        {
+            // Laravel uses cost factor 12 and $2y$ prefix
+            try
+            {
+                // Generate hash with cost 12 to match Laravel
+                var hash = BCrypt.Net.BCrypt.HashPassword(password, 12);
+
+                // Convert $2a$ or $2b$ prefix to $2y$ (Laravel's preferred format)
+                if (hash.StartsWith("$2a$"))
+                {
+                    hash = hash.Replace("$2a$", "$2y$");
+                }
+                else if (hash.StartsWith("$2b$"))
+                {
+                    hash = hash.Replace("$2b$", "$2y$");
+                }
+
+                return hash;
+            }
+            catch
+            {
+                // Fallback: Generate salt manually with cost 12
+                var salt = BCrypt.Net.BCrypt.GenerateSalt(12);
+                var hash = BCrypt.Net.BCrypt.HashPassword(password, salt);
+
+                // Ensure $2y$ prefix
+                if (hash.StartsWith("$2a$") || hash.StartsWith("$2b$"))
+                {
+                    hash = hash.Replace("$2a$", "$2y$").Replace("$2b$", "$2y$");
+                }
+
+                return hash;
+            }
+        }
+
         public User CreateUser(string firstName, string lastName, string email, string password, string roleName)
         {
             // Check if user already exists
@@ -28,8 +64,8 @@ namespace USPGH_planning_lourd.services
                 first_name = firstName,
                 last_name = lastName,
                 email = email,
-                // Use the BCrypt.Net package directly
-                password = BCrypt.Net.BCrypt.HashPassword(password),
+                // Generate Laravel-compatible BCrypt hash
+                password = GenerateLaravelCompatibleHash(password),
                 email_verified_at = DateTime.Now,
                 created_at = DateTime.Now,
                 updated_at = DateTime.Now

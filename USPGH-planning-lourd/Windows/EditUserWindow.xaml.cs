@@ -61,6 +61,22 @@ namespace USPGH_planning_lourd
                         return;
                     }
 
+                    // Load current roles to check current status
+                    db.LoadUserRoles(userToUpdate);
+
+                    // Check role change validation
+                    bool shouldBeAdmin = RoleComboBox.SelectedIndex == 0;
+                    bool isCurrentlyAdmin = userToUpdate.IsAdmin;
+
+                    // Prevent removing admin privileges
+                    if (isCurrentlyAdmin && !shouldBeAdmin)
+                    {
+                        MessageBox.Show("Impossible de retirer les privilèges d'administrateur à cet utilisateur.\n\n" +
+                                      "Pour des raisons de sécurité, vous ne pouvez pas changer un administrateur en salarié.",
+                                      "Modification interdite", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        return;
+                    }
+
                     // Update user data
                     userToUpdate.first_name = FirstNameTextBox.Text;
                     userToUpdate.last_name = LastNameTextBox.Text;
@@ -70,40 +86,44 @@ namespace USPGH_planning_lourd
                     // Update password if provided
                     if (!string.IsNullOrWhiteSpace(PasswordBox.Password))
                     {
-                        userToUpdate.password = BCrypt.Net.BCrypt.HashPassword(PasswordBox.Password);
+                        // Use cost factor 12 and $2y$ prefix to match Laravel
+                        var hash = BCrypt.Net.BCrypt.HashPassword(PasswordBox.Password, 12);
+                        if (hash.StartsWith("$2a$") || hash.StartsWith("$2b$"))
+                        {
+                            hash = hash.Replace("$2a$", "$2y$").Replace("$2b$", "$2y$");
+                        }
+                        userToUpdate.password = hash;
                     }
 
                     // Save the changes
                     db.SaveChanges();
 
-                    // Update role if changed
-                    bool shouldBeAdmin = RoleComboBox.SelectedIndex == 0;
-                    bool isCurrentlyAdmin = userToUpdate.IsAdmin;
-
-                    // Load current roles
-                    db.LoadUserRoles(userToUpdate);
-
-                    // Only process role changes if needed
+                    // Update role if changed (only allow promoting to admin, not demoting)
                     if (shouldBeAdmin != isCurrentlyAdmin)
                     {
-                        // Remove existing roles
-                        foreach (var role in userToUpdate.Roles.ToList())
+                        // This should only happen when promoting salarié to admin
+                        // (since we blocked admin to salarié above)
+                        if (!isCurrentlyAdmin && shouldBeAdmin)
                         {
-                            _userService.RemoveRoleFromUser(userToUpdate.Id, role.Name);
-                        }
+                            // Remove existing roles
+                            foreach (var role in userToUpdate.Roles.ToList())
+                            {
+                                _userService.RemoveRoleFromUser(userToUpdate.Id, role.Name);
+                            }
 
-                        // Add the new role
-                        string newRole = shouldBeAdmin ? "admin" : "salarie";
-                        _userService.AssignRoleToUser(userToUpdate.Id, newRole);
+                            // Add admin role
+                            _userService.AssignRoleToUser(userToUpdate.Id, "admin");
+                        }
                     }
                 }
 
+                MessageBox.Show("Utilisateur modifié avec succès !", "Succès", MessageBoxButton.OK, MessageBoxImage.Information);
                 DialogResult = true;
                 Close();
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Une erreur est survenue: {ex.Message}", "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Une erreur s'est produite : {ex.Message}", "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 

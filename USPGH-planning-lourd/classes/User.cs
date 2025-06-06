@@ -43,6 +43,21 @@ namespace USPGH_planning_lourd.classes
         [NotMapped]
         public List<Role> Roles { get; set; } = new List<Role>();
 
+        // Display property for the role column
+        [NotMapped]
+        public string RoleDisplay
+        {
+            get
+            {
+                if (IsAdmin) return "Administrateur";
+                if (IsSalarie) return "Salarié";
+
+                // Fallback: show the first role name if available
+                var firstRole = Roles?.FirstOrDefault();
+                return firstRole?.Name ?? "Aucun rôle";
+            }
+        }
+
         // Check if user has a specific role
         public bool HasRole(string roleName)
         {

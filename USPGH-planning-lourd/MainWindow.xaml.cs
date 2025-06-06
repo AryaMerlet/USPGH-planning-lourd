@@ -58,7 +58,7 @@ namespace USPGH_planning_lourd
             catch (Exception ex)
             {
                 MessageBox.Show($"Erreur de connexion à la base de données: {ex.Message}\n\nDétail: {ex.InnerException?.Message}",
-                    "Erreur de connexion", MessageBoxButton.OK, MessageBoxImage.Error);
+                    "Erreur de connexion à la base de données", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -74,7 +74,7 @@ namespace USPGH_planning_lourd
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur lors de l'ajout d'un utilisateur: {ex.Message}", "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Erreur lors de l'ajout de l'utilisateur: {ex.Message}", "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -115,8 +115,36 @@ namespace USPGH_planning_lourd
                         return;
                     }
 
+                    // Check if user has data in the application before attempting deletion
+                    using (var db = new AppDbContext())
+                    {
+                        // Check for planning records
+                        var hasData = db.Database.ExecuteSqlRaw("SELECT COUNT(*) FROM plannings WHERE user_id_creation = {0}", selectedUser.Id);
+
+                        // Alternative check using a simple query
+                        bool userHasData = false;
+                        try
+                        {
+                            var planningCount = db.Database.SqlQueryRaw<int>("SELECT COUNT(*) FROM plannings WHERE user_id_creation = {0}", selectedUser.Id).FirstOrDefault();
+                            userHasData = planningCount > 0;
+                        }
+                        catch
+                        {
+                            // If we can't check, assume user has data to be safe
+                            userHasData = true;
+                        }
+
+                        if (userHasData)
+                        {
+                            MessageBox.Show("Impossible de supprimer cet utilisateur car il a des données associées dans l'application (plannings, etc.).\n\n" +
+                                          "Vous devez d'abord supprimer ou réassigner toutes les données de cet utilisateur avant de pouvoir le supprimer.",
+                                          "Suppression impossible", MessageBoxButton.OK, MessageBoxImage.Warning);
+                            return;
+                        }
+                    }
+
                     MessageBoxResult result = MessageBox.Show("Êtes-vous sûr de vouloir supprimer cet utilisateur ?",
-                        "Confirmation", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+                        "Confirmer la suppression", MessageBoxButton.YesNo, MessageBoxImage.Question);
 
                     if (result == MessageBoxResult.Yes)
                     {
@@ -125,9 +153,27 @@ namespace USPGH_planning_lourd
                             var userToDelete = db.Users.Find(selectedUser.Id);
                             if (userToDelete != null)
                             {
+                                // Only delete role assignments, then the user
+                                var userRoles = db.UserRoles
+                                    .Where(ur => ur.EntityId == selectedUser.Id && ur.EntityType == "App\\Models\\User")
+                                    .ToList();
+
+                                if (userRoles.Any())
+                                {
+                                    db.UserRoles.RemoveRange(userRoles);
+                                }
+
                                 db.Users.Remove(userToDelete);
                                 db.SaveChanges();
+
+                                MessageBox.Show("Utilisateur supprimé avec succès !", "Succès",
+                                    MessageBoxButton.OK, MessageBoxImage.Information);
                                 LoadUsers();
+                            }
+                            else
+                            {
+                                MessageBox.Show("Utilisateur introuvable dans la base de données", "Erreur",
+                                    MessageBoxButton.OK, MessageBoxImage.Error);
                             }
                         }
                     }
@@ -139,7 +185,18 @@ namespace USPGH_planning_lourd
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur lors de la suppression de l'utilisateur: {ex.Message}", "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                // This will catch foreign key constraint errors
+                if (ex.Message.Contains("foreign key constraint") || ex.InnerException?.Message.Contains("foreign key constraint") == true)
+                {
+                    MessageBox.Show("Impossible de supprimer cet utilisateur car il a des données associées dans l'application.\n\n" +
+                                  "Vous devez d'abord supprimer ou réassigner toutes les données de cet utilisateur avant de pouvoir le supprimer.",
+                                  "Suppression impossible", MessageBoxButton.OK, MessageBoxImage.Warning);
+                }
+                else
+                {
+                    MessageBox.Show($"Erreur lors de la suppression de l'utilisateur: {ex.Message}",
+                        "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
             }
         }
     }
