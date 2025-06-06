@@ -13,25 +13,25 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <TextBlock Grid.Row="0" Text="User Management" FontSize="18" FontWeight="Bold" Margin="0,0,0,10"/>
+        <TextBlock Grid.Row="0" Text="Gestion des Utilisateurs" FontSize="18" FontWeight="Bold" Margin="0,0,0,10"/>
 
         <DataGrid Grid.Row="1" Name="UsersList" AutoGenerateColumns="False" IsReadOnly="True" 
                   ItemsSource="{Binding Users}" SelectionMode="Single" Margin="0,0,0,10">
             <DataGrid.Columns>
                 <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="50"/>
-                <DataGridTextColumn Header="First Name" Binding="{Binding first_name}" Width="120"/>
-                <DataGridTextColumn Header="Last Name" Binding="{Binding last_name}" Width="120"/>
+                <DataGridTextColumn Header="Prénom" Binding="{Binding first_name}" Width="120"/>
+                <DataGridTextColumn Header="Nom" Binding="{Binding last_name}" Width="120"/>
                 <DataGridTextColumn Header="Email" Binding="{Binding email}" Width="180"/>
                 <DataGridTextColumn Header="Admin" Binding="{Binding IsAdmin}" Width="60"/>
-                <DataGridTextColumn Header="Salarie" Binding="{Binding IsSalarie}" Width="60"/>
-                <DataGridTextColumn Header="Created" Binding="{Binding created_at, StringFormat={}{0:dd/MM/yyyy HH:mm}}" Width="120"/>
+                <DataGridTextColumn Header="Salarié" Binding="{Binding IsSalarie}" Width="60"/>
+                <DataGridTextColumn Header="Créé le" Binding="{Binding created_at, StringFormat={}{0:dd/MM/yyyy HH:mm}}" Width="120"/>
             </DataGrid.Columns>
         </DataGrid>
 
         <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right">
-            <Button Name="AddUser" Content="Add User" Width="80" Margin="0,0,10,0" Click="AddUser_Click"/>
-            <Button Name="EditUser" Content="Edit User" Width="80" Margin="0,0,10,0" Click="EditUser_Click"/>
-            <Button Name="DeleteUser" Content="Delete User" Width="80" Click="DeleteUser_Click"/>
+            <Button Name="AddUser" Content="Ajouter" Width="80" Margin="0,0,10,0" Click="AddUser_Click"/>
+            <Button Name="EditUser" Content="Modifier" Width="80" Margin="0,0,10,0" Click="EditUser_Click"/>
+            <Button Name="DeleteUser" Content="Supprimer" Width="80" Click="DeleteUser_Click"/>
         </StackPanel>
     </Grid>
 </Window>

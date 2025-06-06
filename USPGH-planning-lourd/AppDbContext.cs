@@ -41,13 +41,25 @@ namespace USPGH_planning_lourd
         {
             base.OnModelCreating(modelBuilder);
 
-            // Configure the UserRole entity
+            // Configure the UserRole entity with composite key
             modelBuilder.Entity<UserRole>()
-                .HasKey(ur => new { ur.RoleId, ur.ModelType, ur.UserId });
+                .HasKey(ur => ur.Id); // Using the primary key 'id' from assigned_roles table
 
             // Configure table names explicitly
             modelBuilder.Entity<Role>().ToTable("roles");
-            modelBuilder.Entity<UserRole>().ToTable("model_has_roles");
+            modelBuilder.Entity<UserRole>().ToTable("assigned_roles");
+            modelBuilder.Entity<User>().ToTable("users");
+
+            // Configure relationships
+            modelBuilder.Entity<UserRole>()
+                .HasOne(ur => ur.Role)
+                .WithMany()
+                .HasForeignKey(ur => ur.RoleId);
+
+            modelBuilder.Entity<UserRole>()
+                .HasOne(ur => ur.User)
+                .WithMany()
+                .HasForeignKey(ur => ur.EntityId);
         }
 
         // Helper method to load user roles
@@ -62,7 +74,7 @@ namespace USPGH_planning_lourd
             // Clear existing roles and load from database
             user.Roles.Clear();
             var roles = UserRoles
-                .Where(ur => ur.UserId == user.Id && ur.ModelType == "App\\Models\\User")
+                .Where(ur => ur.EntityId == user.Id && ur.EntityType == "App\\Models\\User")
                 .Join(Roles, ur => ur.RoleId, r => r.Id, (ur, r) => r)
                 .ToList();
 

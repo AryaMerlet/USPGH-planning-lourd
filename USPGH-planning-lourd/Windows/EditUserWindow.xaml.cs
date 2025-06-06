@@ -44,7 +44,7 @@ namespace USPGH_planning_lourd
                 string.IsNullOrWhiteSpace(LastNameTextBox.Text) ||
                 string.IsNullOrWhiteSpace(EmailTextBox.Text))
             {
-                MessageBox.Show("Please fill in all required fields.", "Validation Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show("Veuillez remplir tous les champs obligatoires.", "Erreur de validation", MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
             }
 
@@ -57,7 +57,7 @@ namespace USPGH_planning_lourd
 
                     if (userToUpdate == null)
                     {
-                        MessageBox.Show("User not found in the database", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                        MessageBox.Show("Utilisateur introuvable dans la base de données", "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
                         return;
                     }
 
@@ -103,7 +103,7 @@ namespace USPGH_planning_lourd
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"An error occurred: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Une erreur est survenue: {ex.Message}", "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 

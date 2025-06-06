@@ -46,8 +46,8 @@ namespace USPGH_planning_lourd
                         }
                         catch (Exception ex)
                         {
-                            MessageBox.Show($"Error loading roles for user {user.email}: {ex.Message}",
-                                "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                            MessageBox.Show($"Erreur lors du chargement des rôles pour l'utilisateur {user.email}: {ex.Message}",
+                                "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
 
                             // Add the user anyway, but without roles
                             Users.Add(user);
@@ -57,8 +57,8 @@ namespace USPGH_planning_lourd
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error connecting to database: {ex.Message}\n\nDetail: {ex.InnerException?.Message}",
-                    "Database Connection Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Erreur de connexion à la base de données: {ex.Message}\n\nDétail: {ex.InnerException?.Message}",
+                    "Erreur de connexion", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -74,7 +74,7 @@ namespace USPGH_planning_lourd
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error adding user: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Erreur lors de l'ajout d'un utilisateur: {ex.Message}", "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -92,12 +92,12 @@ namespace USPGH_planning_lourd
                 }
                 else
                 {
-                    MessageBox.Show("Please select a user to edit", "No Selection", MessageBoxButton.OK, MessageBoxImage.Information);
+                    MessageBox.Show("Veuillez sélectionner un utilisateur à modifier", "Aucune sélection", MessageBoxButton.OK, MessageBoxImage.Information);
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error editing user: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Erreur lors de la modification de l'utilisateur: {ex.Message}", "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -110,13 +110,13 @@ namespace USPGH_planning_lourd
                     // Check if the user is an admin
                     if (selectedUser.IsAdmin)
                     {
-                        MessageBox.Show("You cannot delete an administrator!",
-                            "Operation not allowed", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        MessageBox.Show("Vous ne pouvez pas supprimer un administrateur !",
+                            "Opération non autorisée", MessageBoxButton.OK, MessageBoxImage.Warning);
                         return;
                     }
 
-                    MessageBoxResult result = MessageBox.Show("Are you sure you want to delete this user?",
-                        "Confirm", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+                    MessageBoxResult result = MessageBox.Show("Êtes-vous sûr de vouloir supprimer cet utilisateur ?",
+                        "Confirmation", MessageBoxButton.YesNo, MessageBoxImage.Warning);
 
                     if (result == MessageBoxResult.Yes)
                     {
@@ -134,12 +134,12 @@ namespace USPGH_planning_lourd
                 }
                 else
                 {
-                    MessageBox.Show("Please select a user to delete", "No Selection", MessageBoxButton.OK, MessageBoxImage.Information);
+                    MessageBox.Show("Veuillez sélectionner un utilisateur à supprimer", "Aucune sélection", MessageBoxButton.OK, MessageBoxImage.Information);
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error deleting user: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Erreur lors de la suppression de l'utilisateur: {ex.Message}", "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
     }

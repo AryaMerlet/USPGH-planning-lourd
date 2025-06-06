@@ -11,7 +11,7 @@ namespace USPGH_planning_lourd
         public static List<Role> GetUserRoles(this AppDbContext dbContext, User user)
         {
             return dbContext.UserRoles
-                .Where(ur => ur.UserId == user.Id && ur.ModelType == "App\\Models\\User")
+                .Where(ur => ur.EntityId == user.Id && ur.EntityType == "App\\Models\\User")
                 .Include(ur => ur.Role)
                 .Select(ur => ur.Role)
                 .ToList();
